@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/api:${{ steps.version.outputs.VERSION }}
+            ghcr.io/${{ github.repository }}/api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Python services
+        run: |
+          for svc in fraud-detection currency-conversion tax-calculation notification-service report-generation analytics recommendation-engine inventory-forecast document-processing ai-scoring; do
+            docker build services/$svc \
+              -t ghcr.io/${{ github.repository }}/$svc:${{ steps.version.outputs.VERSION }} \
+              -t ghcr.io/${{ github.repository }}/$svc:latest
+            docker push ghcr.io/${{ github.repository }}/$svc:${{ steps.version.outputs.VERSION }}
+            docker push ghcr.io/${{ github.repository }}/$svc:latest
+          done
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          files: |
+            docker-compose.yml
+            .env.example
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

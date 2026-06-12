@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexusPay - Payment Orchestration Platform</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <div class="auth-logo">
+      <div class="logo-icon">⚡</div>
+      <h1>NexusPay</h1>
+      <p>Payment Orchestration Platform</p>
+    </div>
+    <div class="auth-card">
+      <h2>Welcome back</h2>
+      <p class="auth-subtitle">Sign in to your account</p>
+      <form id="loginForm" novalidate>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="admin@nexuspay.com" required autocomplete="email" />
+          <span class="field-error" id="emailError"></span>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-group">
+            <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password" />
+            <button type="button" class="input-addon" id="togglePassword" aria-label="Toggle password visibility">👁</button>
+          </div>
+          <span class="field-error" id="passwordError"></span>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="rememberMe" />
+            <span>Remember me</span>
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+          <span class="btn-text">Sign In</span>
+          <span class="btn-spinner hidden">⟳</span>
+        </button>
+        <div id="loginError" class="alert alert-error hidden"></div>
+      </form>
+      <div class="auth-footer">
+        <a href="#" id="forgotPasswordLink">Forgot password?</a>
+      </div>
+    </div>
+    <div class="auth-demo">
+      <p>Demo credentials:</p>
+      <code>admin@nexuspay.com / Admin@123456</code>
+    </div>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+name: Docker Build Check
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile*'
+      - 'services/*/Dockerfile'
+      - 'docker-compose.yml'
+
+jobs:
+  docker-compose-validate:
+    name: Validate Docker Compose
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env from example
+        run: |
+          cp .env.example .env
+          echo "JWT_SECRET=ci-jwt-secret-minimum-32-chars-long-abc" >> .env
+          echo "JWT_REFRESH_SECRET=ci-refresh-secret-minimum-32-chars-abc" >> .env
+
+      - name: Validate docker-compose
+        run: docker compose config --quiet
+
+      - name: Check all Dockerfiles build
+        run: |
+          docker build -t nexuspay-api:ci --target builder .
+          for svc in fraud-detection currency-conversion tax-calculation; do
+            echo "Building $svc..."
+            docker build services/$svc -t nexuspay-$svc:ci --quiet
+          done

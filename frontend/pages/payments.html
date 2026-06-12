@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payments - NexusPay</title>
+  <link rel="stylesheet" href="../css/main.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">⚡ NexusPay</div>
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></a>
+        <a href="payments.html" class="nav-item active"><span class="nav-icon">💳</span><span class="nav-label">Payments</span></a>
+        <a href="merchants.html" class="nav-item"><span class="nav-icon">🏪</span><span class="nav-label">Merchants</span></a>
+        <a href="customers.html" class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Customers</span></a>
+        <a href="reports.html" class="nav-item"><span class="nav-icon">📈</span><span class="nav-label">Reports</span></a>
+        <a href="monitoring.html" class="nav-item"><span class="nav-icon">🔍</span><span class="nav-label">Monitoring</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info" id="userInfo"></div>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">Sign Out</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <header class="page-header">
+        <div class="page-title"><h1>Payments</h1><p>Manage and monitor payment transactions</p></div>
+        <div class="header-actions">
+          <button class="btn btn-primary" id="createPaymentBtn">+ New Payment</button>
+        </div>
+      </header>
+
+      <div class="filters-bar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search payments..." />
+        </div>
+        <select id="statusFilter" class="filter-select">
+          <option value="">All Statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="PROCESSING">Processing</option>
+          <option value="SUCCESS">Success</option>
+          <option value="FAILED">Failed</option>
+          <option value="REFUNDED">Refunded</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+        <input type="date" id="startDate" class="filter-date" />
+        <input type="date" id="endDate" class="filter-date" />
+        <button class="btn btn-secondary" id="applyFilters">Apply</button>
+        <button class="btn btn-ghost" id="resetFilters">Reset</button>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <table class="table" id="paymentsTable">
+            <thead>
+              <tr>
+                <th>ID</th><th>Amount</th><th>Currency</th><th>Status</th>
+                <th>Method</th><th>Merchant</th><th>Date</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTableBody">
+              <tr><td colspan="8" class="text-center">Loading...</td></tr>
+            </tbody>
+          </table>
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Payment Modal -->
+  <div class="modal-overlay hidden" id="createPaymentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Create Payment</h3>
+        <button class="modal-close" id="closeModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="createPaymentForm">
+          <div class="form-group">
+            <label>Amount</label>
+            <input type="number" id="payAmount" step="0.01" min="0.01" placeholder="0.00" required />
+          </div>
+          <div class="form-group">
+            <label>Currency</label>
+            <select id="payCurrency">
+              <option value="USD">USD - US Dollar</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="GBP">GBP - British Pound</option>
+              <option value="CAD">CAD - Canadian Dollar</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Payment Method</label>
+            <select id="payMethod">
+              <option value="CARD">Card</option>
+              <option value="BANK_TRANSFER">Bank Transfer</option>
+              <option value="WALLET">Wallet</option>
+              <option value="UPI">UPI</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <input type="text" id="payDescription" placeholder="Payment description" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Create Payment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/auth-guard.js"></script>
+  <script src="../js/payments.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+groups:
+  - name: nexuspay_api_alerts
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(nexuspay_http_requests_total{status_code=~"5.."}[5m])) /
+            sum(rate(nexuspay_http_requests_total[5m]))
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP error rate ({{ $value | printf \"%.2f\" }}%)"
+          description: "API error rate exceeds 5% for 2+ minutes."
+
+      - alert: HighResponseLatency
+        expr: |
+          histogram_quantile(0.95,
+            rate(nexuspay_http_request_duration_seconds_bucket[5m])
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API response latency (P95 = {{ $value | printf \"%.2f\" }}s)"
+          description: "95th percentile latency exceeds 2 seconds."
+
+      - alert: APIGatewayDown
+        expr: up{job="nexuspay-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NexusPay API Gateway is down"
+          description: "The API Gateway has been unreachable for 1+ minutes."
+
+  - name: nexuspay_payment_alerts
+    rules:
+      - alert: HighPaymentFailureRate
+        expr: |
+          (
+            sum(increase(nexuspay_payments_created_total{status="failed"}[10m])) /
+            sum(increase(nexuspay_payments_created_total[10m]))
+          ) * 100 > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High payment failure rate ({{ $value | printf \"%.1f\" }}%)"
+          description: "Payment failure rate exceeds 10% in the last 10 minutes."
+
+      - alert: FraudServiceDown
+        expr: up{job="nexuspay-fraud-detection"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Fraud Detection Service is down"
+          description: "Payments will be processed without fraud checking."
+
+  - name: nexuspay_infrastructure_alerts
+    rules:
+      - alert: CircuitBreakerOpen
+        expr: nexuspay_circuit_breaker_state > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Circuit breaker open for {{ $labels.service }}"
+          description: "Service {{ $labels.service }} circuit breaker is open."
+
+      - alert: QueueJobFailures
+        expr: |
+          sum(rate(nexuspay_queue_jobs_total{status="failed"}[5m])) by (queue) > 1
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queue failures in {{ $labels.queue }}"
+          description: "Jobs are failing in queue {{ $labels.queue }}."

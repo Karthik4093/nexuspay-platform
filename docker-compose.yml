@@ -1,0 +1,394 @@
+name: nexuspay
+
+x-common-env: &common-env
+  NODE_ENV: production
+  DATABASE_URL: postgresql://nexuspay:nexuspay_secret@postgres:5432/nexuspay_db
+  REDIS_URL: redis://redis:6379
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  RABBITMQ_URL: amqp://nexuspay:nexuspay_secret@rabbitmq:5672
+  JWT_SECRET: "nexuspay-jwt-secret-change-in-production-min32chars"
+  JWT_REFRESH_SECRET: "nexuspay-refresh-secret-change-in-prod-min32chars"
+  JWT_EXPIRES_IN: 15m
+  JWT_REFRESH_EXPIRES_IN: 7d
+  BCRYPT_ROUNDS: "12"
+  LOG_LEVEL: info
+  LOG_PRETTY: "false"
+  OTEL_ENABLED: "true"
+  OTEL_SERVICE_NAME: nexuspay-api-gateway
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  FRAUD_SERVICE_URL: http://fraud-detection:8001
+  CURRENCY_SERVICE_URL: http://currency-conversion:8002
+  TAX_SERVICE_URL: http://tax-calculation:8003
+  NOTIFICATION_SERVICE_URL: http://notification-service:8004
+  REPORT_SERVICE_URL: http://report-generation:8005
+  ANALYTICS_SERVICE_URL: http://analytics:8006
+  RECOMMENDATION_SERVICE_URL: http://recommendation-engine:8007
+  INVENTORY_SERVICE_URL: http://inventory-forecast:8008
+  DOCUMENT_SERVICE_URL: http://document-processing:8009
+  AI_SCORING_SERVICE_URL: http://ai-scoring:8010
+  CORS_ORIGIN: "http://localhost:8080"
+  METRICS_PORT: "9091"
+
+services:
+  # ============================================================
+  # INFRASTRUCTURE
+  # ============================================================
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: nexuspay-postgres
+    environment:
+      POSTGRES_DB: nexuspay_db
+      POSTGRES_USER: nexuspay
+      POSTGRES_PASSWORD: nexuspay_secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexuspay -d nexuspay_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: nexuspay-redis
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: nexuspay-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: nexuspay
+      RABBITMQ_DEFAULT_PASS: nexuspay_secret
+      RABBITMQ_DEFAULT_VHOST: /
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  # ============================================================
+  # MIGRATIONS (runs once then exits)
+  # ============================================================
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    command: sh -c "npx prisma migrate deploy && npx tsx prisma/seeds/seed.ts"
+    environment:
+      <<: *common-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nexuspay-net
+    restart: "no"
+
+  # ============================================================
+  # NODE.JS API GATEWAY
+  # ============================================================
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nexuspay-api
+    environment:
+      <<: *common-env
+      PORT: "3000"
+      HOST: 0.0.0.0
+    ports:
+      - "3000:3000"
+      - "9091:9091"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  # ============================================================
+  # WORKER SERVICE
+  # ============================================================
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: nexuspay-worker
+    environment:
+      <<: *common-env
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  # ============================================================
+  # PYTHON MICROSERVICES
+  # ============================================================
+
+  fraud-detection:
+    build: services/fraud-detection
+    container_name: nexuspay-fraud
+    ports: ["8001:8001"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  currency-conversion:
+    build: services/currency-conversion
+    container_name: nexuspay-currency
+    ports: ["8002:8002"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  tax-calculation:
+    build: services/tax-calculation
+    container_name: nexuspay-tax
+    ports: ["8003:8003"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  notification-service:
+    build: services/notification-service
+    container_name: nexuspay-notification
+    ports: ["8004:8004"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  report-generation:
+    build: services/report-generation
+    container_name: nexuspay-reports
+    ports: ["8005:8005"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  analytics:
+    build: services/analytics
+    container_name: nexuspay-analytics
+    ports: ["8006:8006"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  recommendation-engine:
+    build: services/recommendation-engine
+    container_name: nexuspay-recommendation
+    ports: ["8007:8007"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  inventory-forecast:
+    build: services/inventory-forecast
+    container_name: nexuspay-inventory
+    ports: ["8008:8008"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  document-processing:
+    build: services/document-processing
+    container_name: nexuspay-docs
+    ports: ["8009:8009"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  ai-scoring:
+    build: services/ai-scoring
+    container_name: nexuspay-ai
+    ports: ["8010:8010"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  # ============================================================
+  # FRONTEND
+  # ============================================================
+
+  frontend:
+    image: nginx:alpine
+    container_name: nexuspay-frontend
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  # ============================================================
+  # MONITORING
+  # ============================================================
+
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    container_name: nexuspay-prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts:/etc/prometheus/alerts:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--storage.tsdb.retention.time=30d'
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: nexuspay-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: nexuspay_grafana
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    container_name: nexuspay-otel
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./monitoring/otel-collector.yml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8888:8888"
+    restart: unless-stopped
+    networks:
+      - nexuspay-net
+
+# ============================================================
+# VOLUMES & NETWORKS
+# ============================================================
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  nexuspay-net:
+    driver: bridge

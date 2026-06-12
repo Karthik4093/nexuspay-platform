@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - NexusPay</title>
+  <link rel="stylesheet" href="../css/main.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">⚡ NexusPay</div>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item active"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></a>
+        <a href="payments.html" class="nav-item"><span class="nav-icon">💳</span><span class="nav-label">Payments</span></a>
+        <a href="merchants.html" class="nav-item"><span class="nav-icon">🏪</span><span class="nav-label">Merchants</span></a>
+        <a href="customers.html" class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Customers</span></a>
+        <a href="reports.html" class="nav-item"><span class="nav-icon">📈</span><span class="nav-label">Reports</span></a>
+        <a href="monitoring.html" class="nav-item"><span class="nav-icon">🔍</span><span class="nav-label">Monitoring</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info" id="userInfo"></div>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">Sign Out</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <header class="page-header">
+        <div class="page-title">
+          <h1>Dashboard</h1>
+          <p>Welcome back, <span id="userName">User</span></p>
+        </div>
+        <div class="header-actions">
+          <span class="badge badge-live">● Live</span>
+          <span id="currentTime" class="text-muted"></span>
+        </div>
+      </header>
+
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card loading">
+          <div class="stat-icon">💰</div>
+          <div class="stat-content">
+            <div class="stat-value" id="totalRevenue">—</div>
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-change positive" id="revenueChange">+0%</div>
+          </div>
+        </div>
+        <div class="stat-card loading">
+          <div class="stat-icon">📦</div>
+          <div class="stat-content">
+            <div class="stat-value" id="totalPayments">—</div>
+            <div class="stat-label">Total Payments</div>
+            <div class="stat-change" id="paymentsChange">—</div>
+          </div>
+        </div>
+        <div class="stat-card loading">
+          <div class="stat-icon">✅</div>
+          <div class="stat-content">
+            <div class="stat-value" id="successRate">—</div>
+            <div class="stat-label">Success Rate</div>
+            <div class="stat-change" id="successChange">—</div>
+          </div>
+        </div>
+        <div class="stat-card loading">
+          <div class="stat-icon">👥</div>
+          <div class="stat-content">
+            <div class="stat-value" id="activeCustomers">—</div>
+            <div class="stat-label">Active Customers</div>
+            <div class="stat-change" id="customersChange">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3>Recent Payments</h3>
+            <a href="payments.html" class="btn btn-ghost btn-sm">View All →</a>
+          </div>
+          <div class="card-body">
+            <table class="table" id="recentPayments">
+              <thead>
+                <tr>
+                  <th>ID</th><th>Amount</th><th>Status</th><th>Method</th><th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="recentPaymentsBody">
+                <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Payment Status Breakdown</h3>
+          </div>
+          <div class="card-body">
+            <div id="statusBreakdown" class="status-breakdown"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="services-grid">
+        <div class="card">
+          <div class="card-header"><h3>Service Health</h3></div>
+          <div class="card-body" id="serviceHealth">
+            <div class="loading-placeholder">Checking services...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="../js/api.js"></script>
+  <script src="../js/auth-guard.js"></script>
+  <script src="../js/dashboard.js"></script>
+</body>
+</html>

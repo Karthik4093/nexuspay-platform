@@ -1,0 +1,82 @@
+{
+  "title": "NexusPay Platform Overview",
+  "uid": "nexuspay-overview",
+  "version": 1,
+  "schemaVersion": 38,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "HTTP Request Rate",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(nexuspay_http_requests_total[5m])) by (status_code)",
+          "legendFormat": "{{status_code}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "P95 Response Time",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(nexuspay_http_request_duration_seconds_bucket[5m]))",
+          "legendFormat": "P95 Latency"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Payments Created",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(increase(nexuspay_payments_created_total[1h]))",
+          "legendFormat": "Payments/hr"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Payment Success Rate",
+      "type": "gauge",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(nexuspay_payments_created_total{status='success'}[5m])) / sum(rate(nexuspay_payments_created_total[5m])) * 100",
+          "legendFormat": "Success %"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Circuit Breaker States",
+      "type": "table",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "nexuspay_circuit_breaker_state",
+          "legendFormat": "{{service}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Queue Job Status",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "expr": "sum(rate(nexuspay_queue_jobs_total[5m])) by (queue, status)",
+          "legendFormat": "{{queue}} - {{status}}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: nexuspay
+    env: production
+
+rule_files:
+  - '/etc/prometheus/alerts/*.yml'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'nexuspay-api'
+    static_configs:
+      - targets: ['api:9091']
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  - job_name: 'nexuspay-fraud-detection'
+    static_configs:
+      - targets: ['fraud-detection:8001']
+    metrics_path: /metrics
+
+  - job_name: 'nexuspay-currency-conversion'
+    static_configs:
+      - targets: ['currency-conversion:8002']
+    metrics_path: /metrics
+
+  - job_name: 'nexuspay-tax-calculation'
+    static_configs:
+      - targets: ['tax-calculation:8003']
+    metrics_path: /metrics
+
+  - job_name: 'nexuspay-notification'
+    static_configs:
+      - targets: ['notification-service:8004']
+    metrics_path: /metrics
+
+  - job_name: 'nexuspay-report-generation'
+    static_configs:
+      - targets: ['report-generation:8005']
+    metrics_path: /metrics
+
+  - job_name: 'nexuspay-analytics'
+    static_configs:
+      - targets: ['analytics:8006']
+    metrics_path: /metrics
+
+  - job_name: 'nexuspay-recommendation'
+    static_configs:
+      - targets: ['recommendation-engine:8007']
+    metrics_path: /metrics
+
+  - job_name: 'nexuspay-inventory'
+    static_configs:
+      - targets: ['inventory-forecast:8008']
+    metrics_path: /metrics
+
+  - job_name: 'nexuspay-document-processing'
+    static_configs:
+      - targets: ['document-processing:8009']
+    metrics_path: /metrics
+
+  - job_name: 'nexuspay-ai-scoring'
+    static_configs:
+      - targets: ['ai-scoring:8010']
+    metrics_path: /metrics
+
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres:5432']
+
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis:6379']
+
+  - job_name: 'rabbitmq-exporter'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+
+  - job_name: 'otel-collector'
+    static_configs:
+      - targets: ['otel-collector:8888']
+    metrics_path: /metrics

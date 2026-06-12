@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports - NexusPay</title>
+  <link rel="stylesheet" href="../css/main.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header"><div class="logo">⚡ NexusPay</div><button class="sidebar-toggle" id="sidebarToggle">☰</button></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></a>
+        <a href="payments.html" class="nav-item"><span class="nav-icon">💳</span><span class="nav-label">Payments</span></a>
+        <a href="merchants.html" class="nav-item"><span class="nav-icon">🏪</span><span class="nav-label">Merchants</span></a>
+        <a href="customers.html" class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Customers</span></a>
+        <a href="reports.html" class="nav-item active"><span class="nav-icon">📈</span><span class="nav-label">Reports</span></a>
+        <a href="monitoring.html" class="nav-item"><span class="nav-icon">🔍</span><span class="nav-label">Monitoring</span></a>
+      </nav>
+      <div class="sidebar-footer"><div class="user-info" id="userInfo"></div><button class="btn btn-ghost btn-sm" id="logoutBtn">Sign Out</button></div>
+    </aside>
+    <main class="main-content">
+      <header class="page-header">
+        <div class="page-title"><h1>Reports</h1><p>Generate and download business reports</p></div>
+        <div class="header-actions"><button class="btn btn-primary" id="generateReportBtn">+ Generate Report</button></div>
+      </header>
+      <div class="reports-grid">
+        <div class="card report-card" onclick="generateReport('DAILY_SUMMARY')">
+          <div class="report-icon">📅</div>
+          <h3>Daily Summary</h3>
+          <p>Transaction summary for a specific day</p>
+          <button class="btn btn-secondary">Generate</button>
+        </div>
+        <div class="card report-card" onclick="generateReport('PAYMENT_REPORT')">
+          <div class="report-icon">💳</div>
+          <h3>Payment Report</h3>
+          <p>Detailed payment transaction report</p>
+          <button class="btn btn-secondary">Generate</button>
+        </div>
+        <div class="card report-card" onclick="generateReport('REVENUE_REPORT')">
+          <div class="report-icon">💰</div>
+          <h3>Revenue Report</h3>
+          <p>Revenue analysis and breakdown</p>
+          <button class="btn btn-secondary">Generate</button>
+        </div>
+        <div class="card report-card" onclick="generateReport('AUDIT_REPORT')">
+          <div class="report-icon">🔍</div>
+          <h3>Audit Report</h3>
+          <p>Complete audit trail report</p>
+          <button class="btn btn-secondary">Generate</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Recent Reports</h3></div>
+        <div class="card-body">
+          <table class="table">
+            <thead><tr><th>Type</th><th>Status</th><th>Date Range</th><th>Generated</th><th>Actions</th></tr></thead>
+            <tbody id="reportsTableBody"><tr><td colspan="5" class="text-center">No reports yet</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="../js/api.js"></script>
+  <script src="../js/auth-guard.js"></script>
+  <script src="../js/reports.js"></script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monitoring - NexusPay</title>
+  <link rel="stylesheet" href="../css/main.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header"><div class="logo">⚡ NexusPay</div><button class="sidebar-toggle" id="sidebarToggle">☰</button></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></a>
+        <a href="payments.html" class="nav-item"><span class="nav-icon">💳</span><span class="nav-label">Payments</span></a>
+        <a href="merchants.html" class="nav-item"><span class="nav-icon">🏪</span><span class="nav-label">Merchants</span></a>
+        <a href="customers.html" class="nav-item"><span class="nav-icon">👥</span><span class="nav-label">Customers</span></a>
+        <a href="reports.html" class="nav-item"><span class="nav-icon">📈</span><span class="nav-label">Reports</span></a>
+        <a href="monitoring.html" class="nav-item active"><span class="nav-icon">🔍</span><span class="nav-label">Monitoring</span></a>
+      </nav>
+      <div class="sidebar-footer"><div class="user-info" id="userInfo"></div><button class="btn btn-ghost btn-sm" id="logoutBtn">Sign Out</button></div>
+    </aside>
+    <main class="main-content">
+      <header class="page-header">
+        <div class="page-title"><h1>Monitoring</h1><p>System health and performance overview</p></div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" id="refreshBtn">↻ Refresh</button>
+          <span class="badge badge-live">● Auto-refresh</span>
+        </div>
+      </header>
+
+      <div class="stats-grid">
+        <div class="stat-card" id="apiStatus">
+          <div class="stat-icon">🌐</div>
+          <div class="stat-content"><div class="stat-value" id="apiStatusVal">Checking...</div><div class="stat-label">API Gateway</div></div>
+        </div>
+        <div class="stat-card" id="dbStatus">
+          <div class="stat-icon">🗄️</div>
+          <div class="stat-content"><div class="stat-value" id="dbStatusVal">Checking...</div><div class="stat-label">Database</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-content"><div class="stat-value" id="responseTime">—</div><div class="stat-label">Avg Response Time</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔄</div>
+          <div class="stat-content"><div class="stat-value" id="requestsPerSec">—</div><div class="stat-label">Requests/sec</div></div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-header"><h3>Python Microservices</h3></div>
+          <div class="card-body">
+            <div id="servicesStatus">
+              <div class="loading-placeholder">Checking services...</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Queue Metrics</h3></div>
+          <div class="card-body" id="queueMetrics">
+            <div class="metric-row"><span>Payment Queue</span><span class="badge badge-success">Active</span></div>
+            <div class="metric-row"><span>Notification Queue</span><span class="badge badge-success">Active</span></div>
+            <div class="metric-row"><span>Report Queue</span><span class="badge badge-success">Active</span></div>
+            <div class="metric-row"><span>Cleanup Queue</span><span class="badge badge-success">Active</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>External Links</h3>
+        </div>
+        <div class="card-body">
+          <div class="links-grid">
+            <a href="http://localhost:3001" target="_blank" class="ext-link-card">
+              <span class="link-icon">📊</span>
+              <span class="link-name">Grafana</span>
+              <span class="link-url">:3001</span>
+            </a>
+            <a href="http://localhost:9090" target="_blank" class="ext-link-card">
+              <span class="link-icon">🔥</span>
+              <span class="link-name">Prometheus</span>
+              <span class="link-url">:9090</span>
+            </a>
+            <a href="http://localhost:15672" target="_blank" class="ext-link-card">
+              <span class="link-icon">🐇</span>
+              <span class="link-name">RabbitMQ</span>
+              <span class="link-url">:15672</span>
+            </a>
+            <a href="http://localhost:3000/api/docs" target="_blank" class="ext-link-card">
+              <span class="link-icon">📖</span>
+              <span class="link-name">API Docs</span>
+              <span class="link-url">:3000/api/docs</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="../js/api.js"></script>
+  <script src="../js/auth-guard.js"></script>
+  <script src="../js/monitoring.js"></script>
+</body>
+</html>
