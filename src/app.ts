@@ -59,8 +59,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   await fastify.register(cors, {
-    origin: config.CORS_ORIGIN,
-    credentials: true,
+    origin: true,
+    credentials: false,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID', 'X-Idempotency-Key'],
   });
