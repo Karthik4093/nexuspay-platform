@@ -9,7 +9,7 @@ export async function reportRoutes(fastify: FastifyInstance, options: { prefix: 
   const prisma = fastify.prisma as PrismaClient;
   const p = options.prefix;
 
-  fastify.post(`${p}/reports`, {
+  fastify.post(`/reports`, {
     preHandler: [authenticate, requireMerchant],
     schema: { tags: ['Reports'], summary: 'Generate a report', security: [{ bearerAuth: [] }] },
     handler: async (request, reply) => {
@@ -30,7 +30,7 @@ export async function reportRoutes(fastify: FastifyInstance, options: { prefix: 
     },
   });
 
-  fastify.get(`${p}/reports`, {
+  fastify.get(`/reports`, {
     preHandler: [authenticate],
     schema: { tags: ['Reports'], summary: 'List reports', security: [{ bearerAuth: [] }] },
     handler: async (request, reply) => {
@@ -45,7 +45,7 @@ export async function reportRoutes(fastify: FastifyInstance, options: { prefix: 
     },
   });
 
-  fastify.get(`${p}/reports/:id`, {
+  fastify.get(`/reports/:id`, {
     preHandler: [authenticate],
     schema: { tags: ['Reports'], summary: 'Get report by ID', security: [{ bearerAuth: [] }] },
     handler: async (request, reply) => {

@@ -48,7 +48,7 @@ const envSchema = z.object({
   CIRCUIT_BREAKER_ERROR_THRESHOLD: z.coerce.number().default(50),
   CIRCUIT_BREAKER_RESET_TIMEOUT: z.coerce.number().default(30000),
 
-  OTEL_ENABLED: z.coerce.boolean().default(false),
+  OTEL_ENABLED: z.string().transform(v => v === 'true').default('false'),
   OTEL_SERVICE_NAME: z.string().default('nexuspay-api-gateway'),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default('http://localhost:4318'),
   JAEGER_ENDPOINT: z.string().default('http://localhost:14268/api/traces'),
@@ -56,7 +56,7 @@ const envSchema = z.object({
   METRICS_PORT: z.coerce.number().default(9091),
 
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
-  LOG_PRETTY: z.coerce.boolean().default(false),
+  LOG_PRETTY: z.string().transform(v => v === 'true').default('false'),
 
   QUEUE_CONCURRENCY: z.coerce.number().default(5),
   QUEUE_ATTEMPTS: z.coerce.number().default(3),

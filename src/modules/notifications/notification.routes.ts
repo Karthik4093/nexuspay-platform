@@ -8,7 +8,7 @@ export async function notificationRoutes(fastify: FastifyInstance, options: { pr
   const prisma = fastify.prisma as PrismaClient;
   const p = options.prefix;
 
-  fastify.get(`${p}/notifications`, {
+  fastify.get(`/notifications`, {
     preHandler: [authenticate],
     schema: { tags: ['Notifications'], summary: 'List notifications', security: [{ bearerAuth: [] }] },
     handler: async (request, reply) => {

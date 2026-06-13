@@ -10,19 +10,19 @@ export async function refundRoutes(fastify: FastifyInstance, options: { prefix: 
   const controller = new RefundController(service);
   const p = options.prefix;
 
-  fastify.post(`${p}/refunds`, {
+  fastify.post(`/refunds`, {
     preHandler: [authenticate, requireMerchant],
     schema: { tags: ['Refunds'], summary: 'Create a refund', security: [{ bearerAuth: [] }] },
     handler: controller.create.bind(controller),
   });
 
-  fastify.get(`${p}/refunds`, {
+  fastify.get(`/refunds`, {
     preHandler: [authenticate],
     schema: { tags: ['Refunds'], summary: 'List refunds', security: [{ bearerAuth: [] }] },
     handler: controller.getAll.bind(controller),
   });
 
-  fastify.get(`${p}/refunds/:id`, {
+  fastify.get(`/refunds/:id`, {
     preHandler: [authenticate],
     schema: { tags: ['Refunds'], summary: 'Get refund by ID', security: [{ bearerAuth: [] }] },
     handler: controller.getById.bind(controller),

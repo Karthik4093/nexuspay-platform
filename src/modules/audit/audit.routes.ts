@@ -8,7 +8,7 @@ export async function auditRoutes(fastify: FastifyInstance, options: { prefix: s
   const prisma = fastify.prisma as PrismaClient;
   const p = options.prefix;
 
-  fastify.get(`${p}/audit-logs`, {
+  fastify.get(`/audit-logs`, {
     preHandler: [authenticate, requireSupport],
     schema: { tags: ['Audit'], summary: 'List audit logs', security: [{ bearerAuth: [] }] },
     handler: async (request, reply) => {
@@ -35,7 +35,7 @@ export async function auditRoutes(fastify: FastifyInstance, options: { prefix: s
     },
   });
 
-  fastify.get(`${p}/audit-logs/:id`, {
+  fastify.get(`/audit-logs/:id`, {
     preHandler: [authenticate, requireSupport],
     schema: { tags: ['Audit'], summary: 'Get audit log by ID', security: [{ bearerAuth: [] }] },
     handler: async (request, reply) => {

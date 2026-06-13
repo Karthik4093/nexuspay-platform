@@ -10,31 +10,31 @@ export async function customerRoutes(fastify: FastifyInstance, options: { prefix
   const controller = new CustomerController(service);
   const p = options.prefix;
 
-  fastify.post(`${p}/merchants/:merchantId/customers`, {
+  fastify.post(`/merchants/:merchantId/customers`, {
     preHandler: [authenticate, requireMerchant],
     schema: { tags: ['Customers'], summary: 'Create customer for merchant', security: [{ bearerAuth: [] }] },
     handler: controller.create.bind(controller),
   });
 
-  fastify.get(`${p}/customers`, {
+  fastify.get(`/customers`, {
     preHandler: [authenticate],
     schema: { tags: ['Customers'], summary: 'List customers', security: [{ bearerAuth: [] }] },
     handler: controller.getAll.bind(controller),
   });
 
-  fastify.get(`${p}/customers/:id`, {
+  fastify.get(`/customers/:id`, {
     preHandler: [authenticate],
     schema: { tags: ['Customers'], summary: 'Get customer by ID', security: [{ bearerAuth: [] }] },
     handler: controller.getById.bind(controller),
   });
 
-  fastify.patch(`${p}/customers/:id`, {
+  fastify.patch(`/customers/:id`, {
     preHandler: [authenticate, requireMerchant],
     schema: { tags: ['Customers'], summary: 'Update customer', security: [{ bearerAuth: [] }] },
     handler: controller.update.bind(controller),
   });
 
-  fastify.delete(`${p}/customers/:id`, {
+  fastify.delete(`/customers/:id`, {
     preHandler: [authenticate, requireMerchant],
     schema: { tags: ['Customers'], summary: 'Delete customer', security: [{ bearerAuth: [] }] },
     handler: controller.delete.bind(controller),

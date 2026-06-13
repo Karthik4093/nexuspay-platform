@@ -1,10 +1,11 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { Resource } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-otlp-http';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
+import { PgInstrumentation } from '@opentelemetry/instrumentation-pg';
+import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis';
+import { AmqplibInstrumentation } from '@opentelemetry/instrumentation-amqplib';
 import { config } from '../config';
 
 let sdk: NodeSDK | null = null;
@@ -17,32 +18,23 @@ export function initTelemetry() {
     endpoint: '/metrics',
   });
 
-  const traceExporter = new OTLPTraceExporter({
-    url: `${config.OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces`,
-  });
-
   sdk = new NodeSDK({
     resource: new Resource({
-      [SemanticResourceAttributes.SERVICE_NAME]: config.SERVICE_NAME,
-      [SemanticResourceAttributes.SERVICE_VERSION]: '1.0.0',
-      [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: config.NODE_ENV,
+      'service.name': config.SERVICE_NAME,
+      'service.version': '1.0.0',
+      'deployment.environment': config.NODE_ENV,
     }),
     metricReader: prometheusExporter,
-    spanProcessor: new BatchSpanProcessor(traceExporter),
     instrumentations: [
-      getNodeAutoInstrumentations({
-        '@opentelemetry/instrumentation-http': { enabled: true },
-        '@opentelemetry/instrumentation-fastify': { enabled: true },
-        '@opentelemetry/instrumentation-pg': { enabled: true },
-        '@opentelemetry/instrumentation-ioredis': { enabled: true },
-        '@opentelemetry/instrumentation-amqplib': { enabled: true },
-        '@opentelemetry/instrumentation-fs': { enabled: false },
-      }),
+      new FastifyInstrumentation(),
+      new PgInstrumentation(),
+      new IORedisInstrumentation(),
+      new AmqplibInstrumentation(),
     ],
   });
 
   sdk.start();
-  console.log('📡 OpenTelemetry initialized');
+  console.log('OpenTelemetry initialized');
 }
 
 export async function shutdownTelemetry() {
