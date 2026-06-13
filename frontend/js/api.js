@@ -3,7 +3,9 @@
  * Handles all communication with the API Gateway
  */
 
-const API_BASE = 'http://localhost:3000/api/v1';
+const API_BASE =
+  (window.NEXUSPAY_CONFIG && window.NEXUSPAY_CONFIG.API_URL) ||
+  'http://localhost:3000/api/v1';
 
 const NexusAPI = {
   _token: null,
