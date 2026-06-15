@@ -77,7 +77,7 @@ export class AuthService {
 
     const valid = await verifyPassword(input.password, user.passwordHash);
     if (!valid) {
-      await this.userRepo.incrementFailedLogin(user.id);
+      await this.userRepo.incrementFailedLogin(user.id, user.failedLoginCount);
       throw new UnauthorizedError('Invalid credentials');
     }
 

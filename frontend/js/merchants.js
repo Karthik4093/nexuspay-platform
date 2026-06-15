@@ -1,4 +1,9 @@
-document.addEventListener('DOMContentLoaded', () => loadMerchants());
+document.addEventListener('DOMContentLoaded', () => {
+  loadMerchants();
+  initModal();
+});
+
+// ── List ────────────────────────────────────────────────────────────────────
 
 async function loadMerchants(page = 1) {
   const status = document.getElementById('statusFilter')?.value;
@@ -19,9 +24,11 @@ async function loadMerchants(page = 1) {
         <h4>${m.name}</h4>
         <div class="meta">${m.email}<br/>${m.country} · ${m.currency}</div>
         <span class="status-${m.status}">${m.status}</span>
-        <div class="actions" style="margin-top:.75rem">
-          ${m.status === 'PENDING' ? `<button class="btn btn-secondary btn-sm" onclick="activateMerchant('${m.id}')">Activate</button>` : ''}
-          ${m.status === 'ACTIVE' ? `<button class="btn btn-danger btn-sm" onclick="suspendMerchant('${m.id}')">Suspend</button>` : ''}
+        <div class="actions" style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="openEditModal('${m.id}')">Edit</button>
+          ${m.status === 'PENDING'    ? `<button class="btn btn-secondary btn-sm" onclick="activateMerchant('${m.id}')">Activate</button>` : ''}
+          ${m.status === 'ACTIVE'     ? `<button class="btn btn-danger btn-sm"    onclick="suspendMerchant('${m.id}')">Suspend</button>` : ''}
+          ${m.status === 'SUSPENDED'  ? `<button class="btn btn-secondary btn-sm" onclick="activateMerchant('${m.id}')">Reactivate</button>` : ''}
         </div>
       </div>
     `).join('');
@@ -30,6 +37,111 @@ async function loadMerchants(page = 1) {
     document.getElementById('merchantsGrid').innerHTML = `<div class="loading-placeholder">${err.error?.message || 'Failed to load'}</div>`;
   }
 }
+
+// ── Modal ───────────────────────────────────────────────────────────────────
+
+let _editingId = null;
+
+function initModal() {
+  document.getElementById('createMerchantBtn')?.addEventListener('click', openCreateModal);
+  document.getElementById('modalCancelBtn')?.addEventListener('click', closeModal);
+  document.getElementById('merchantModal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('merchantModal')) closeModal();
+  });
+  document.getElementById('merchantForm')?.addEventListener('submit', handleSubmit);
+}
+
+function openCreateModal() {
+  _editingId = null;
+  document.getElementById('modalTitle').textContent = 'New Merchant';
+  document.getElementById('modalSubmitBtn').textContent = 'Create Merchant';
+  clearForm();
+  showModal();
+}
+
+async function openEditModal(id) {
+  try {
+    const res = await NexusAPI.merchants.get(id);
+    if (!res?.success) return;
+    const m = res.data;
+    _editingId = id;
+    document.getElementById('modalTitle').textContent = 'Edit Merchant';
+    document.getElementById('modalSubmitBtn').textContent = 'Save Changes';
+    document.getElementById('mName').value         = m.name        || '';
+    document.getElementById('mEmail').value        = m.email       || '';
+    document.getElementById('mCountry').value      = m.country     || 'US';
+    document.getElementById('mCurrency').value     = m.currency    || 'USD';
+    document.getElementById('mPhone').value        = m.phone       || '';
+    document.getElementById('mWebsite').value      = m.website     || '';
+    document.getElementById('mBusinessType').value = m.businessType|| '';
+    document.getElementById('mWebhookUrl').value   = m.webhookUrl  || '';
+    showModal();
+  } catch (err) {
+    showToast(err.error?.message || 'Failed to load merchant', 'error');
+  }
+}
+
+function showModal() {
+  const modal = document.getElementById('merchantModal');
+  modal.style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('merchantModal').style.display = 'none';
+  _editingId = null;
+  clearForm();
+}
+
+function clearForm() {
+  document.getElementById('mName').value         = '';
+  document.getElementById('mEmail').value        = '';
+  document.getElementById('mCountry').value      = 'US';
+  document.getElementById('mCurrency').value     = 'USD';
+  document.getElementById('mPhone').value        = '';
+  document.getElementById('mWebsite').value      = '';
+  document.getElementById('mBusinessType').value = '';
+  document.getElementById('mWebhookUrl').value   = '';
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('modalSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = _editingId ? 'Saving...' : 'Creating...';
+
+  const payload = {
+    name:         document.getElementById('mName').value.trim(),
+    email:        document.getElementById('mEmail').value.trim(),
+    country:      document.getElementById('mCountry').value.trim().toUpperCase() || 'US',
+    currency:     document.getElementById('mCurrency').value.trim().toUpperCase() || 'USD',
+  };
+  const phone       = document.getElementById('mPhone').value.trim();
+  const website     = document.getElementById('mWebsite').value.trim();
+  const bizType     = document.getElementById('mBusinessType').value.trim();
+  const webhookUrl  = document.getElementById('mWebhookUrl').value.trim();
+  if (phone)      payload.phone        = phone;
+  if (website)    payload.website      = website;
+  if (bizType)    payload.businessType = bizType;
+  if (webhookUrl) payload.webhookUrl   = webhookUrl;
+
+  try {
+    if (_editingId) {
+      await NexusAPI.merchants.update(_editingId, payload);
+      showToast('Merchant updated');
+    } else {
+      await NexusAPI.merchants.create(payload);
+      showToast('Merchant created');
+    }
+    closeModal();
+    loadMerchants();
+  } catch (err) {
+    showToast(err.error?.message || 'Operation failed', 'error');
+    btn.disabled = false;
+    btn.textContent = _editingId ? 'Save Changes' : 'Create Merchant';
+  }
+}
+
+// ── Actions ─────────────────────────────────────────────────────────────────
 
 async function activateMerchant(id) {
   try {
@@ -51,6 +163,8 @@ async function suspendMerchant(id) {
     showToast(err.error?.message || 'Failed to suspend', 'error');
   }
 }
+
+// ── Pagination ───────────────────────────────────────────────────────────────
 
 function renderPagination(meta, loadFn) {
   const container = document.getElementById('pagination');

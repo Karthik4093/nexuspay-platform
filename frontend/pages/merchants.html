@@ -41,6 +41,55 @@
       <div class="pagination" id="pagination"></div>
     </main>
   </div>
+  <!-- Create/Edit Merchant Modal -->
+  <div id="merchantModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;">
+    <div style="background:var(--surface,#1e293b);border-radius:12px;padding:2rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+      <h3 id="modalTitle" style="margin:0 0 1.5rem;font-size:1.2rem;">New Merchant</h3>
+      <form id="merchantForm">
+        <div style="display:grid;gap:1rem;">
+          <div>
+            <label style="display:block;font-size:.85rem;color:var(--text-muted,#94a3b8);margin-bottom:.4rem;">Business Name *</label>
+            <input id="mName" type="text" required placeholder="Acme Corp" style="width:100%;padding:.6rem .8rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.95rem;box-sizing:border-box;" />
+          </div>
+          <div>
+            <label style="display:block;font-size:.85rem;color:var(--text-muted,#94a3b8);margin-bottom:.4rem;">Email *</label>
+            <input id="mEmail" type="email" required placeholder="billing@acme.com" style="width:100%;padding:.6rem .8rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.95rem;box-sizing:border-box;" />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div>
+              <label style="display:block;font-size:.85rem;color:var(--text-muted,#94a3b8);margin-bottom:.4rem;">Country (2-letter)</label>
+              <input id="mCountry" type="text" maxlength="2" placeholder="US" value="US" style="width:100%;padding:.6rem .8rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.95rem;box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:.85rem;color:var(--text-muted,#94a3b8);margin-bottom:.4rem;">Currency (3-letter)</label>
+              <input id="mCurrency" type="text" maxlength="3" placeholder="USD" value="USD" style="width:100%;padding:.6rem .8rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.95rem;box-sizing:border-box;" />
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:.85rem;color:var(--text-muted,#94a3b8);margin-bottom:.4rem;">Phone</label>
+            <input id="mPhone" type="text" placeholder="+1 555 000 0000" style="width:100%;padding:.6rem .8rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.95rem;box-sizing:border-box;" />
+          </div>
+          <div>
+            <label style="display:block;font-size:.85rem;color:var(--text-muted,#94a3b8);margin-bottom:.4rem;">Website</label>
+            <input id="mWebsite" type="url" placeholder="https://acme.com" style="width:100%;padding:.6rem .8rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.95rem;box-sizing:border-box;" />
+          </div>
+          <div>
+            <label style="display:block;font-size:.85rem;color:var(--text-muted,#94a3b8);margin-bottom:.4rem;">Business Type</label>
+            <input id="mBusinessType" type="text" placeholder="E-commerce, SaaS, Retail..." style="width:100%;padding:.6rem .8rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.95rem;box-sizing:border-box;" />
+          </div>
+          <div>
+            <label style="display:block;font-size:.85rem;color:var(--text-muted,#94a3b8);margin-bottom:.4rem;">Webhook URL</label>
+            <input id="mWebhookUrl" type="url" placeholder="https://acme.com/webhooks/nexuspay" style="width:100%;padding:.6rem .8rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.95rem;box-sizing:border-box;" />
+          </div>
+        </div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;">
+          <button type="button" id="modalCancelBtn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" id="modalSubmitBtn" class="btn btn-primary">Create Merchant</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="../config.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/auth-guard.js"></script>

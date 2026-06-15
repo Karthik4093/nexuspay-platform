@@ -9,8 +9,8 @@ echo.
 
 cd /d E:\nexuspay-platform
 
-echo  [1/2] Starting API Server on http://localhost:3001
-start "NexusPay API" cmd /k "cd /d E:\nexuspay-platform && set PORT=3001 && npx tsx src/server.ts"
+echo  [1/2] Starting API Server on http://localhost:3000
+start "NexusPay API" cmd /k "cd /d E:\nexuspay-platform && npx tsx src/server.ts"
 
 echo  Waiting 8 seconds for API to initialize...
 timeout /t 8 /nobreak > nul
@@ -33,8 +33,8 @@ echo  ====================================================
 echo   NexusPay is LIVE!
 echo.
 echo   Frontend:  http://localhost:8080
-echo   API:       http://localhost:3001
-echo   API Docs:  http://localhost:3001/api/docs
+echo   API:       http://localhost:3000
+echo   API Docs:  http://localhost:3000/api/docs
 echo.
 echo   Login: admin@nexuspay.com / Admin@123456
 echo  ====================================================

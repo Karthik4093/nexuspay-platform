@@ -9,6 +9,7 @@ const API_BASE =
 
 const NexusAPI = {
   _token: null,
+  _refreshing: null,
 
   getToken() {
     if (!this._token) this._token = localStorage.getItem('nexus_token');
@@ -27,6 +28,38 @@ const NexusAPI = {
     localStorage.removeItem('nexus_refresh');
   },
 
+  async _tryRefresh() {
+    if (this._refreshing) return this._refreshing;
+    const refreshToken = localStorage.getItem('nexus_refresh');
+    if (!refreshToken) return false;
+
+    this._refreshing = (async () => {
+      try {
+        const resp = await fetch(`${API_BASE}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+        if (!resp.ok) return false;
+        const data = await resp.json();
+        if (data.data?.accessToken) {
+          this.setToken(data.data.accessToken);
+          if (data.data.refreshToken) {
+            localStorage.setItem('nexus_refresh', data.data.refreshToken);
+          }
+          return true;
+        }
+        return false;
+      } catch {
+        return false;
+      } finally {
+        this._refreshing = null;
+      }
+    })();
+
+    return this._refreshing;
+  },
+
   async request(method, path, body = null, options = {}) {
     const correlationId = 'req_' + Math.random().toString(36).slice(2, 22);
     const headers = {
@@ -38,13 +71,17 @@ const NexusAPI = {
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     const config = { method, headers };
-    if (body) config.body = JSON.stringify(body);
+    if (body && method !== 'GET') config.body = JSON.stringify(body);
 
     try {
       const response = await fetch(`${API_BASE}${path}`, config);
       const data = await response.json();
 
-      if (response.status === 401 && !options.noRedirect) {
+      if (response.status === 401 && !options.noRedirect && !options._retry) {
+        const refreshed = await this._tryRefresh();
+        if (refreshed) {
+          return this.request(method, path, body, { ...options, _retry: true });
+        }
         this.clearToken();
         window.location.href = '../index.html';
         return null;
@@ -88,8 +125,12 @@ const NexusAPI = {
       return NexusAPI.request('GET', `/merchants${q ? '?' + q : ''}`);
     },
     get: (id) => NexusAPI.request('GET', `/merchants/${id}`),
+    create: (data) => NexusAPI.request('POST', '/merchants', data),
+    update: (id, data) => NexusAPI.request('PATCH', `/merchants/${id}`, data),
     activate: (id) => NexusAPI.request('POST', `/merchants/${id}/activate`),
     suspend: (id) => NexusAPI.request('POST', `/merchants/${id}/suspend`),
+    rotateKeys: (id) => NexusAPI.request('POST', `/merchants/${id}/rotate-keys`),
+    delete: (id) => NexusAPI.request('DELETE', `/merchants/${id}`),
   },
 
   // Customers
@@ -99,6 +140,9 @@ const NexusAPI = {
       return NexusAPI.request('GET', `/customers${q ? '?' + q : ''}`);
     },
     get: (id) => NexusAPI.request('GET', `/customers/${id}`),
+    create: (merchantId, data) => NexusAPI.request('POST', `/merchants/${merchantId}/customers`, data),
+    update: (id, data) => NexusAPI.request('PATCH', `/customers/${id}`, data),
+    delete: (id) => NexusAPI.request('DELETE', `/customers/${id}`),
   },
 
   // Reports
@@ -122,6 +166,14 @@ const NexusAPI = {
       return NexusAPI.request('GET', `/refunds${q ? '?' + q : ''}`);
     },
     create: (data) => NexusAPI.request('POST', '/refunds', data),
+  },
+
+  // Notifications
+  notifications: {
+    list: (params = {}) => {
+      const q = new URLSearchParams(params).toString();
+      return NexusAPI.request('GET', `/notifications${q ? '?' + q : ''}`);
+    },
   },
 };
 

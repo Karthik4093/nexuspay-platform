@@ -49,12 +49,14 @@ export class UserRepository {
     });
   }
 
-  async incrementFailedLogin(id: string): Promise<void> {
+  async incrementFailedLogin(id: string, currentCount: number): Promise<void> {
+    const MAX_FAILED_ATTEMPTS = 5;
+    const willLock = currentCount + 1 >= MAX_FAILED_ATTEMPTS;
     await this.prisma.user.update({
       where: { id },
       data: {
         failedLoginCount: { increment: 1 },
-        lockedUntil: { set: new Date(Date.now() + 15 * 60 * 1000) },
+        ...(willLock ? { lockedUntil: new Date(Date.now() + 15 * 60 * 1000) } : {}),
       },
     });
   }
