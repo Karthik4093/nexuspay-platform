@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   } else if (_isAdmin) {
     loadMerchants();
     initModal();
+    initUserModal();
   } else {
     // SUPPORT role has no merchant access
     document.getElementById('merchantsGrid').innerHTML =
@@ -74,8 +75,10 @@ function merchantCard(m) {
       <h4>${m.name}</h4>
       <div class="meta">${m.email}<br/>${m.country} · ${m.currency}</div>
       <span class="status-${m.status}">${m.status}</span>
+      <div style="margin-top:.4rem;font-size:.78rem;color:var(--text-muted,#94a3b8);word-break:break-all;">ID: ${m.id}</div>
       <div class="actions" style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;">
         <button class="btn btn-secondary btn-sm" onclick="openEditModal('${m.id}')">Edit</button>
+        ${_isAdmin ? `<button class="btn btn-secondary btn-sm" onclick="openUserModal('${m.id}','${m.name}')">+ Create User</button>` : ''}
         ${_isAdmin && m.status === 'PENDING'   ? `<button class="btn btn-secondary btn-sm" onclick="activateMerchant('${m.id}')">Activate</button>` : ''}
         ${_isAdmin && m.status === 'ACTIVE'    ? `<button class="btn btn-danger btn-sm"    onclick="suspendMerchant('${m.id}')">Suspend</button>` : ''}
         ${_isAdmin && m.status === 'SUSPENDED' ? `<button class="btn btn-secondary btn-sm" onclick="activateMerchant('${m.id}')">Reactivate</button>` : ''}
@@ -203,6 +206,77 @@ async function suspendMerchant(id) {
     loadMerchants();
   } catch (err) {
     showToast(err.error?.message || 'Failed to suspend', 'error');
+  }
+}
+
+// ── Create Merchant User Modal ────────────────────────────────────────────
+
+let _userModalMerchantId = null;
+
+function initUserModal() {
+  document.getElementById('userModalCancelBtn')?.addEventListener('click', closeUserModal);
+  document.getElementById('userModal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('userModal')) closeUserModal();
+  });
+  document.getElementById('userForm')?.addEventListener('submit', handleUserSubmit);
+}
+
+function openUserModal(merchantId, merchantName) {
+  _userModalMerchantId = merchantId;
+  document.getElementById('userModalSubtitle').textContent =
+    `This account will be linked to: ${merchantName}`;
+  document.getElementById('uFirstName').value = '';
+  document.getElementById('uLastName').value  = '';
+  document.getElementById('uEmail').value     = '';
+  document.getElementById('uPassword').value  = '';
+  hideUserError();
+  document.getElementById('userModal').style.display = 'flex';
+}
+
+function closeUserModal() {
+  document.getElementById('userModal').style.display = 'none';
+  _userModalMerchantId = null;
+}
+
+function showUserError(msg) {
+  const el = document.getElementById('userFormError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideUserError() {
+  document.getElementById('userFormError').style.display = 'none';
+}
+
+async function handleUserSubmit(e) {
+  e.preventDefault();
+  hideUserError();
+
+  const btn = document.getElementById('userModalSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Creating...';
+
+  const payload = {
+    firstName:  document.getElementById('uFirstName').value.trim(),
+    lastName:   document.getElementById('uLastName').value.trim(),
+    email:      document.getElementById('uEmail').value.trim(),
+    password:   document.getElementById('uPassword').value,
+    role:       'MERCHANT',
+    merchantId: _userModalMerchantId,
+  };
+
+  try {
+    const res = await NexusAPI.auth.register(payload);
+    if (res?.success) {
+      closeUserModal();
+      showToast(`Account created! Login: ${payload.email} / ${payload.password}`);
+    }
+  } catch (err) {
+    const msg = err.error?.message || 'Failed to create account';
+    showUserError(msg);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create Account';
   }
 }
 

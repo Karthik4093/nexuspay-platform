@@ -90,9 +90,45 @@
     </div>
   </div>
 
+  <!-- Create Merchant User Modal -->
+  <div id="userModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;">
+    <div style="background:var(--surface,#1e293b);border-radius:12px;padding:2rem;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+      <h3 style="margin:0 0 .4rem;font-size:1.1rem;">Create Login Account</h3>
+      <p id="userModalSubtitle" style="margin:0 0 1.25rem;font-size:.85rem;color:var(--text-muted,#94a3b8);"></p>
+      <form id="userForm">
+        <div style="display:grid;gap:.9rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.9rem;">
+            <div>
+              <label style="display:block;font-size:.82rem;color:var(--text-muted,#94a3b8);margin-bottom:.35rem;">First Name *</label>
+              <input id="uFirstName" type="text" required placeholder="John" style="width:100%;padding:.55rem .75rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.9rem;box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:.82rem;color:var(--text-muted,#94a3b8);margin-bottom:.35rem;">Last Name *</label>
+              <input id="uLastName" type="text" required placeholder="Doe" style="width:100%;padding:.55rem .75rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.9rem;box-sizing:border-box;" />
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:.82rem;color:var(--text-muted,#94a3b8);margin-bottom:.35rem;">Email *</label>
+            <input id="uEmail" type="email" required placeholder="john@merchant.com" style="width:100%;padding:.55rem .75rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.9rem;box-sizing:border-box;" />
+          </div>
+          <div>
+            <label style="display:block;font-size:.82rem;color:var(--text-muted,#94a3b8);margin-bottom:.35rem;">Password *</label>
+            <input id="uPassword" type="text" required placeholder="Min 8 chars, uppercase, number, special (!@#$)" style="width:100%;padding:.55rem .75rem;background:var(--surface2,#0f172a);border:1px solid var(--border,#334155);border-radius:6px;color:inherit;font-size:.9rem;box-sizing:border-box;" />
+            <small style="color:var(--text-muted,#94a3b8);font-size:.78rem;">Must have uppercase, lowercase, number and special character</small>
+          </div>
+        </div>
+        <div id="userFormError" style="display:none;margin-top:.75rem;padding:.6rem .8rem;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:6px;color:#f87171;font-size:.85rem;"></div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.25rem;">
+          <button type="button" id="userModalCancelBtn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" id="userModalSubmitBtn" class="btn btn-primary">Create Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="../config.js"></script>
   <script src="../js/api.js?v=2"></script>
   <script src="../js/auth-guard.js"></script>
-  <script src="../js/merchants.js"></script>
+  <script src="../js/merchants.js?v=2"></script>
 </body>
 </html>

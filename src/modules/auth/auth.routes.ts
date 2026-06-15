@@ -10,7 +10,22 @@ export async function authRoutes(fastify: FastifyInstance) {
   const controller = new AuthController(authService);
 
   fastify.post('/auth/register', {
-    schema: { tags: ['Auth'], summary: 'Register a new user' },
+    schema: {
+      tags: ['Auth'],
+      summary: 'Register a new user',
+      body: {
+        type: 'object',
+        required: ['email', 'password', 'firstName', 'lastName'],
+        properties: {
+          email:      { type: 'string', format: 'email' },
+          password:   { type: 'string', minLength: 8 },
+          firstName:  { type: 'string' },
+          lastName:   { type: 'string' },
+          role:       { type: 'string', enum: ['ADMIN', 'MERCHANT', 'SUPPORT'], default: 'MERCHANT' },
+          merchantId: { type: 'string', format: 'uuid', description: 'Required when role is MERCHANT' },
+        },
+      },
+    },
     handler: controller.register.bind(controller),
   });
 

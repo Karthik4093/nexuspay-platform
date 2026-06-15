@@ -102,10 +102,11 @@ const NexusAPI = {
 
   // Auth
   auth: {
-    login: (email, password) => NexusAPI.request('POST', '/auth/login', { email, password }, { noRedirect: true }),
-    logout: () => NexusAPI.request('POST', '/auth/logout'),
-    me: () => NexusAPI.request('GET', '/auth/me'),
-    refresh: (refreshToken) => NexusAPI.request('POST', '/auth/refresh', { refreshToken }, { noRedirect: true }),
+    login:    (email, password) => NexusAPI.request('POST', '/auth/login', { email, password }, { noRedirect: true }),
+    register: (data)            => NexusAPI.request('POST', '/auth/register', data, { noRedirect: true }),
+    logout:   ()                => NexusAPI.request('POST', '/auth/logout'),
+    me:       ()                => NexusAPI.request('GET',  '/auth/me'),
+    refresh:  (refreshToken)    => NexusAPI.request('POST', '/auth/refresh', { refreshToken }, { noRedirect: true }),
   },
 
   // Payments

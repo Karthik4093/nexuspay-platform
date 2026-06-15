@@ -39,6 +39,9 @@ export class AuthService {
   }
 
   async register(input: RegisterInput): Promise<{ user: Omit<User, 'passwordHash'>; tokens: TokenPair }> {
+    if (!input?.email || !input?.password || !input?.firstName || !input?.lastName) {
+      throw new ValidationError('email, password, firstName and lastName are required');
+    }
     const existing = await this.userRepo.findByEmail(input.email);
     if (existing) throw new ConflictError('Email already registered');
 
