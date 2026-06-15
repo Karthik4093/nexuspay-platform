@@ -49,6 +49,19 @@ export async function buildApp(): Promise<FastifyInstance> {
     await prisma.$disconnect();
   });
 
+  // Allow POST/PATCH/DELETE routes with no body and Content-Type: application/json
+  fastify.addContentTypeParser('application/json', { parseAs: 'string' }, (_req, body, done) => {
+    if (!body || (body as string).trim() === '') {
+      done(null, {});
+      return;
+    }
+    try {
+      done(null, JSON.parse(body as string));
+    } catch (err) {
+      done(err as Error);
+    }
+  });
+
   // Core plugins
   await fastify.register(correlationPlugin);
   await fastify.register(loggerPlugin);
