@@ -63,7 +63,6 @@ const NexusAPI = {
   async request(method, path, body = null, options = {}) {
     const correlationId = 'req_' + Math.random().toString(36).slice(2, 22);
     const headers = {
-      'Content-Type': 'application/json',
       'X-Correlation-ID': correlationId,
     };
 
@@ -71,7 +70,10 @@ const NexusAPI = {
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     const config = { method, headers };
-    if (body && method !== 'GET') config.body = JSON.stringify(body);
+    if (body && method !== 'GET') {
+      headers['Content-Type'] = 'application/json';
+      config.body = JSON.stringify(body);
+    }
 
     try {
       const response = await fetch(`${API_BASE}${path}`, config);
