@@ -1,16 +1,34 @@
+const _user = JSON.parse(localStorage.getItem('nexus_user') || '{}');
+const _isAdmin    = _user.role === 'ADMIN';
+const _isMerchant = _user.role === 'MERCHANT';
+
 document.addEventListener('DOMContentLoaded', () => {
-  loadMerchants();
-  initModal();
+  // Hide "New Merchant" for non-admin (only ADMIN can create merchants)
+  if (!_isAdmin) {
+    const btn = document.getElementById('createMerchantBtn');
+    if (btn) btn.style.display = 'none';
+  }
+
+  if (_isMerchant) {
+    loadOwnMerchant();
+  } else if (_isAdmin) {
+    loadMerchants();
+    initModal();
+  } else {
+    // SUPPORT role has no merchant access
+    document.getElementById('merchantsGrid').innerHTML =
+      '<div class="loading-placeholder">Your role does not have access to merchant management.</div>';
+  }
 });
 
-// ── List ────────────────────────────────────────────────────────────────────
+// ── Admin: list all merchants ─────────────────────────────────────────────
 
 async function loadMerchants(page = 1) {
   const status = document.getElementById('statusFilter')?.value;
   const search = document.getElementById('searchInput')?.value;
   const params = { page, limit: 12 };
   if (status) params.status = status;
-  if (search) params.search = search;
+  if (search)  params.search = search;
 
   try {
     const res = await NexusAPI.merchants.list(params);
@@ -19,26 +37,54 @@ async function loadMerchants(page = 1) {
       grid.innerHTML = '<div class="loading-placeholder">No merchants found</div>';
       return;
     }
-    grid.innerHTML = res.data.map(m => `
-      <div class="merchant-card">
-        <h4>${m.name}</h4>
-        <div class="meta">${m.email}<br/>${m.country} · ${m.currency}</div>
-        <span class="status-${m.status}">${m.status}</span>
-        <div class="actions" style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-sm" onclick="openEditModal('${m.id}')">Edit</button>
-          ${m.status === 'PENDING'    ? `<button class="btn btn-secondary btn-sm" onclick="activateMerchant('${m.id}')">Activate</button>` : ''}
-          ${m.status === 'ACTIVE'     ? `<button class="btn btn-danger btn-sm"    onclick="suspendMerchant('${m.id}')">Suspend</button>` : ''}
-          ${m.status === 'SUSPENDED'  ? `<button class="btn btn-secondary btn-sm" onclick="activateMerchant('${m.id}')">Reactivate</button>` : ''}
-        </div>
-      </div>
-    `).join('');
+    grid.innerHTML = res.data.map(m => merchantCard(m)).join('');
     renderPagination(res.meta, loadMerchants);
   } catch (err) {
-    document.getElementById('merchantsGrid').innerHTML = `<div class="loading-placeholder">${err.error?.message || 'Failed to load'}</div>`;
+    document.getElementById('merchantsGrid').innerHTML =
+      `<div class="loading-placeholder">${err.error?.message || 'Failed to load'}</div>`;
   }
 }
 
-// ── Modal ───────────────────────────────────────────────────────────────────
+// ── Merchant role: own merchant only ─────────────────────────────────────
+
+async function loadOwnMerchant() {
+  const grid = document.getElementById('merchantsGrid');
+  if (!_user.merchantId) {
+    grid.innerHTML = '<div class="loading-placeholder">No merchant account linked to your user.</div>';
+    return;
+  }
+  try {
+    const res = await NexusAPI.merchants.get(_user.merchantId);
+    if (!res?.success) {
+      grid.innerHTML = '<div class="loading-placeholder">Merchant not found.</div>';
+      return;
+    }
+    grid.innerHTML = merchantCard(res.data);
+    initModal(); // merchant can edit own record
+  } catch (err) {
+    grid.innerHTML = `<div class="loading-placeholder">${err.error?.message || 'Failed to load'}</div>`;
+  }
+}
+
+// ── Card HTML ─────────────────────────────────────────────────────────────
+
+function merchantCard(m) {
+  return `
+    <div class="merchant-card">
+      <h4>${m.name}</h4>
+      <div class="meta">${m.email}<br/>${m.country} · ${m.currency}</div>
+      <span class="status-${m.status}">${m.status}</span>
+      <div class="actions" style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="openEditModal('${m.id}')">Edit</button>
+        ${_isAdmin && m.status === 'PENDING'   ? `<button class="btn btn-secondary btn-sm" onclick="activateMerchant('${m.id}')">Activate</button>` : ''}
+        ${_isAdmin && m.status === 'ACTIVE'    ? `<button class="btn btn-danger btn-sm"    onclick="suspendMerchant('${m.id}')">Suspend</button>` : ''}
+        ${_isAdmin && m.status === 'SUSPENDED' ? `<button class="btn btn-secondary btn-sm" onclick="activateMerchant('${m.id}')">Reactivate</button>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ── Modal ────────────────────────────────────────────────────────────────
 
 let _editingId = null;
 
@@ -67,14 +113,14 @@ async function openEditModal(id) {
     _editingId = id;
     document.getElementById('modalTitle').textContent = 'Edit Merchant';
     document.getElementById('modalSubmitBtn').textContent = 'Save Changes';
-    document.getElementById('mName').value         = m.name        || '';
-    document.getElementById('mEmail').value        = m.email       || '';
-    document.getElementById('mCountry').value      = m.country     || 'US';
-    document.getElementById('mCurrency').value     = m.currency    || 'USD';
-    document.getElementById('mPhone').value        = m.phone       || '';
-    document.getElementById('mWebsite').value      = m.website     || '';
-    document.getElementById('mBusinessType').value = m.businessType|| '';
-    document.getElementById('mWebhookUrl').value   = m.webhookUrl  || '';
+    document.getElementById('mName').value         = m.name         || '';
+    document.getElementById('mEmail').value        = m.email        || '';
+    document.getElementById('mCountry').value      = m.country      || 'US';
+    document.getElementById('mCurrency').value     = m.currency     || 'USD';
+    document.getElementById('mPhone').value        = m.phone        || '';
+    document.getElementById('mWebsite').value      = m.website      || '';
+    document.getElementById('mBusinessType').value = m.businessType || '';
+    document.getElementById('mWebhookUrl').value   = m.webhookUrl   || '';
     showModal();
   } catch (err) {
     showToast(err.error?.message || 'Failed to load merchant', 'error');
@@ -82,8 +128,7 @@ async function openEditModal(id) {
 }
 
 function showModal() {
-  const modal = document.getElementById('merchantModal');
-  modal.style.display = 'flex';
+  document.getElementById('merchantModal').style.display = 'flex';
 }
 
 function closeModal() {
@@ -93,14 +138,11 @@ function closeModal() {
 }
 
 function clearForm() {
-  document.getElementById('mName').value         = '';
-  document.getElementById('mEmail').value        = '';
-  document.getElementById('mCountry').value      = 'US';
-  document.getElementById('mCurrency').value     = 'USD';
-  document.getElementById('mPhone').value        = '';
-  document.getElementById('mWebsite').value      = '';
-  document.getElementById('mBusinessType').value = '';
-  document.getElementById('mWebhookUrl').value   = '';
+  ['mName','mEmail','mPhone','mWebsite','mBusinessType','mWebhookUrl'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('mCountry').value  = 'US';
+  document.getElementById('mCurrency').value = 'USD';
 }
 
 async function handleSubmit(e) {
@@ -110,15 +152,15 @@ async function handleSubmit(e) {
   btn.textContent = _editingId ? 'Saving...' : 'Creating...';
 
   const payload = {
-    name:         document.getElementById('mName').value.trim(),
-    email:        document.getElementById('mEmail').value.trim(),
-    country:      document.getElementById('mCountry').value.trim().toUpperCase() || 'US',
-    currency:     document.getElementById('mCurrency').value.trim().toUpperCase() || 'USD',
+    name:     document.getElementById('mName').value.trim(),
+    email:    document.getElementById('mEmail').value.trim(),
+    country:  document.getElementById('mCountry').value.trim().toUpperCase()  || 'US',
+    currency: document.getElementById('mCurrency').value.trim().toUpperCase() || 'USD',
   };
-  const phone       = document.getElementById('mPhone').value.trim();
-  const website     = document.getElementById('mWebsite').value.trim();
-  const bizType     = document.getElementById('mBusinessType').value.trim();
-  const webhookUrl  = document.getElementById('mWebhookUrl').value.trim();
+  const phone      = document.getElementById('mPhone').value.trim();
+  const website    = document.getElementById('mWebsite').value.trim();
+  const bizType    = document.getElementById('mBusinessType').value.trim();
+  const webhookUrl = document.getElementById('mWebhookUrl').value.trim();
   if (phone)      payload.phone        = phone;
   if (website)    payload.website      = website;
   if (bizType)    payload.businessType = bizType;
@@ -133,7 +175,7 @@ async function handleSubmit(e) {
       showToast('Merchant created');
     }
     closeModal();
-    loadMerchants();
+    _isAdmin ? loadMerchants() : loadOwnMerchant();
   } catch (err) {
     showToast(err.error?.message || 'Operation failed', 'error');
     btn.disabled = false;
@@ -141,7 +183,7 @@ async function handleSubmit(e) {
   }
 }
 
-// ── Actions ─────────────────────────────────────────────────────────────────
+// ── Admin actions ─────────────────────────────────────────────────────────
 
 async function activateMerchant(id) {
   try {
@@ -164,7 +206,7 @@ async function suspendMerchant(id) {
   }
 }
 
-// ── Pagination ───────────────────────────────────────────────────────────────
+// ── Pagination ────────────────────────────────────────────────────────────
 
 function renderPagination(meta, loadFn) {
   const container = document.getElementById('pagination');
@@ -176,4 +218,6 @@ function renderPagination(meta, loadFn) {
   container.innerHTML = html;
 }
 
-document.getElementById('applyFilters')?.addEventListener('click', () => loadMerchants(1));
+document.getElementById('applyFilters')?.addEventListener('click', () => {
+  if (_isAdmin) loadMerchants(1);
+});
